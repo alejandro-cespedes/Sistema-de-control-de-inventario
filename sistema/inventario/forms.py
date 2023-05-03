@@ -36,7 +36,7 @@ class ProductoFormulario(forms.ModelForm):
         fields = ['descripcion','precio','categoria','tiene_iva']
         labels = {
         'descripcion': 'Nombre',
-        'tiene_iva': 'Incluye IVA?'
+        'tiene_iva': 'Incluye IGV?'
         }
         widgets = {
         'descripcion': forms.TextInput(attrs={'placeholder': 'Nombre del producto',
@@ -89,7 +89,7 @@ class ExportarClientesFormulario(forms.Form):
 
 
 class ClienteFormulario(forms.ModelForm):
-    tipoC =  [ ('1','V'),('2','E') ]
+    tipoC =  [ ('1','Peruano'),('2','Extranjero') ]
 
     telefono2 = forms.CharField(
         required = False,
@@ -120,7 +120,7 @@ class ClienteFormulario(forms.ModelForm):
         model = Cliente
         fields = ['tipoCedula','cedula','nombre','apellido','direccion','nacimiento','telefono','correo','telefono2','correo2']
         labels = {
-        'cedula': 'Cedula del cliente',
+        'cedula': 'Identificacion del proveedor',
         'nombre': 'Nombre del cliente',
         'apellido': 'Apellido del cliente',
         'direccion': 'Direccion del cliente',
@@ -209,7 +209,7 @@ class DetallesPedidoFormulario(forms.Form):
 
 
 class ProveedorFormulario(forms.ModelForm):
-    tipoC =  [ ('1','V'),('2','E') ]
+    tipoC =  [ ('1','Peruano'),('2','Extranjero') ]
 
     telefono2 = forms.CharField(
         required = False,
@@ -240,7 +240,7 @@ class ProveedorFormulario(forms.ModelForm):
         model = Cliente
         fields = ['tipoCedula','cedula','nombre','apellido','direccion','nacimiento','telefono','correo','telefono2','correo2']
         labels = {
-        'cedula': 'Cedula del proveedor',
+        'cedula': 'Identificacion del proveedor',
         'nombre': 'Nombre del proveedor',
         'apellido': 'Apellido del proveedor',
         'direccion': 'Direccion del proveedor',
@@ -392,7 +392,7 @@ class ImportarBDDFormulario(forms.Form):
 
 class OpcionesFormulario(forms.Form):
     moneda = forms.CharField(
-        label = 'Moneda a emplear en el sistema',
+        label = 'Moneda',
         max_length=20,
         widget = forms.TextInput(
         attrs={'placeholder': 'Inserte la abreviatura de la moneda que quiere usar (Ejemplo: $)',
@@ -400,13 +400,13 @@ class OpcionesFormulario(forms.Form):
         )
 
     valor_iva = forms.DecimalField(
-        label="Valor del IVA",
+        label="IGV",
         min_value=0,widget=forms.NumberInput(
             attrs={'placeholder': 'Introduzca el IVA actual',
             'class':'form-control','id':'valor_iva'}))
 
     mensaje_factura = forms.CharField(
-        label = 'Mensaje personal que va en las facturas',
+        label = 'Mensaje de Facturacion',
         max_length=50,
         widget = forms.TextInput(
         attrs={'placeholder': 'Inserte el mensaje personal que ira en el pie de la factura',
@@ -414,7 +414,7 @@ class OpcionesFormulario(forms.Form):
         )
 
     nombre_negocio = forms.CharField(
-        label = 'Nombre actual del negocio',
+        label = 'Nombre de la empresa',
         max_length=50,
         widget = forms.TextInput(
         attrs={'class':'form-control','id':'nombre_negocio',
