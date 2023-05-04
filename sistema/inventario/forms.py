@@ -36,7 +36,7 @@ class ProductoFormulario(forms.ModelForm):
         fields = ['descripcion','precio','categoria','tiene_iva']
         labels = {
         'descripcion': 'Nombre',
-        'tiene_iva': 'Incluye IVA?'
+        'tiene_iva': 'Incluye IGV?'
         }
         widgets = {
         'descripcion': forms.TextInput(attrs={'placeholder': 'Nombre del producto',
@@ -87,9 +87,8 @@ class ExportarClientesFormulario(forms.Form):
         attrs={'id':'hasta','class':'form-control','type':'date'}),
         )   
 
-
 class ClienteFormulario(forms.ModelForm):
-    tipoC =  [ ('1','V'),('2','E') ]
+    tipoC =  [ ('1','Peruano'),('2','Extranjero') ]
 
     telefono2 = forms.CharField(
         required = False,
@@ -209,7 +208,7 @@ class DetallesPedidoFormulario(forms.Form):
 
 
 class ProveedorFormulario(forms.ModelForm):
-    tipoC =  [ ('1','V'),('2','E') ]
+    tipoC =  [ ('1','Peruano'),('2','Extranjero') ]
 
     telefono2 = forms.CharField(
         required = False,
@@ -400,9 +399,9 @@ class OpcionesFormulario(forms.Form):
         )
 
     valor_iva = forms.DecimalField(
-        label="Valor del IVA",
+        label="Valor del IGV",
         min_value=0,widget=forms.NumberInput(
-            attrs={'placeholder': 'Introduzca el IVA actual',
+            attrs={'placeholder': 'Introduzca el IGV actual',
             'class':'form-control','id':'valor_iva'}))
 
     mensaje_factura = forms.CharField(
