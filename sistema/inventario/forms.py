@@ -37,6 +37,7 @@ class ProductoFormulario(forms.ModelForm):
         labels = {
         'descripcion': 'Nombre',
         'tiene_iva': 'Incluye IGV?'
+        'tiene_iva': 'Incluye IGV?'
         }
         widgets = {
         'descripcion': forms.TextInput(attrs={'placeholder': 'Nombre del producto',
@@ -119,7 +120,7 @@ class ClienteFormulario(forms.ModelForm):
         model = Cliente
         fields = ['tipoCedula','cedula','nombre','apellido','direccion','nacimiento','telefono','correo','telefono2','correo2']
         labels = {
-        'cedula': 'Cedula del cliente',
+        'cedula': 'Identificacion del proveedor',
         'nombre': 'Nombre del cliente',
         'apellido': 'Apellido del cliente',
         'direccion': 'Direccion del cliente',
@@ -239,7 +240,7 @@ class ProveedorFormulario(forms.ModelForm):
         model = Cliente
         fields = ['tipoCedula','cedula','nombre','apellido','direccion','nacimiento','telefono','correo','telefono2','correo2']
         labels = {
-        'cedula': 'Cedula del proveedor',
+        'cedula': 'Identificacion del proveedor',
         'nombre': 'Nombre del proveedor',
         'apellido': 'Apellido del proveedor',
         'direccion': 'Direccion del proveedor',
@@ -391,7 +392,7 @@ class ImportarBDDFormulario(forms.Form):
 
 class OpcionesFormulario(forms.Form):
     moneda = forms.CharField(
-        label = 'Moneda a emplear en el sistema',
+        label = 'Moneda',
         max_length=20,
         widget = forms.TextInput(
         attrs={'placeholder': 'Inserte la abreviatura de la moneda que quiere usar (Ejemplo: $)',
@@ -405,7 +406,7 @@ class OpcionesFormulario(forms.Form):
             'class':'form-control','id':'valor_iva'}))
 
     mensaje_factura = forms.CharField(
-        label = 'Mensaje personal que va en las facturas',
+        label = 'Mensaje de Facturacion',
         max_length=50,
         widget = forms.TextInput(
         attrs={'placeholder': 'Inserte el mensaje personal que ira en el pie de la factura',
@@ -413,7 +414,7 @@ class OpcionesFormulario(forms.Form):
         )
 
     nombre_negocio = forms.CharField(
-        label = 'Nombre actual del negocio',
+        label = 'Nombre de la empresa',
         max_length=50,
         widget = forms.TextInput(
         attrs={'class':'form-control','id':'nombre_negocio',
