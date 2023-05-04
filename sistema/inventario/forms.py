@@ -37,7 +37,6 @@ class ProductoFormulario(forms.ModelForm):
         labels = {
         'descripcion': 'Nombre',
         'tiene_iva': 'Incluye IGV?'
-        'tiene_iva': 'Incluye IGV?'
         }
         widgets = {
         'descripcion': forms.TextInput(attrs={'placeholder': 'Nombre del producto',
