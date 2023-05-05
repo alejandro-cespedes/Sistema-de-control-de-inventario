@@ -955,7 +955,6 @@ class AgregarProveedor(LoginRequiredMixin, View):
 
             cedula = form.cleaned_data['cedula']
             nombre = form.cleaned_data['nombre']
-            apellido = form.cleaned_data['apellido']
             direccion = form.cleaned_data['direccion']
             nacimiento = form.cleaned_data['nacimiento']
             telefono = form.cleaned_data['telefono']
@@ -963,7 +962,7 @@ class AgregarProveedor(LoginRequiredMixin, View):
             telefono2 = form.cleaned_data['telefono2']
             correo2 = form.cleaned_data['correo2']
 
-            proveedor = Proveedor(cedula=cedula,nombre=nombre,apellido=apellido,
+            proveedor = Proveedor(cedula=cedula,nombre=nombre,
                 direccion=direccion,nacimiento=nacimiento,telefono=telefono,
                 correo=correo,telefono2=telefono2,correo2=correo2)
             proveedor.save()
@@ -1071,7 +1070,6 @@ class EditarProveedor(LoginRequiredMixin, View):
             # Procesa y asigna los datos con form.cleaned_data como se requiere
             cedula = form.cleaned_data['cedula']
             nombre = form.cleaned_data['nombre']
-            apellido = form.cleaned_data['apellido']
             direccion = form.cleaned_data['direccion']
             nacimiento = form.cleaned_data['nacimiento']
             telefono = form.cleaned_data['telefono']
@@ -1081,7 +1079,6 @@ class EditarProveedor(LoginRequiredMixin, View):
 
             proveedor.cedula = cedula
             proveedor.nombre = nombre
-            proveedor.apellido = apellido
             proveedor.direccion = direccion
             proveedor.nacimiento = nacimiento
             proveedor.telefono = telefono

@@ -218,6 +218,14 @@ class ProveedorFormulario(forms.ModelForm):
         'id':'telefono2','class':'form-control'}),
         )
 
+    apellido = forms.CharField(
+        required = False,
+        label = 'Segundo numero telefonico( Opcional )',
+        widget = forms.TextInput(
+        attrs={'placeholder': 'Inserte el telefono alternativo del proveedor',
+        'id':'telefono2','class':'form-control'}),
+        )
+    
     correo2 = forms.CharField(
         required=False,
         label = 'Segundo correo electronico( Opcional )',

@@ -203,7 +203,7 @@ class Proveedor(models.Model):
     #id
     cedula = models.CharField(max_length=12, unique=True)
     nombre = models.CharField(max_length=40)
-    apellido = models.CharField(max_length=40)
+    apellido = models.CharField(max_length=40,null=True)
     direccion = models.CharField(max_length=200)
     nacimiento = models.DateField()
     telefono = models.CharField(max_length=20)
@@ -218,7 +218,7 @@ class Proveedor(models.Model):
         for indice,objeto in enumerate(objetos):
             arreglo.append([])
             arreglo[indice].append(objeto.cedula)
-            nombre_cliente = objeto.nombre + " " + objeto.apellido
+            nombre_cliente = objeto.nombre
             arreglo[indice].append("%s. C.I: %s" % (nombre_cliente,self.formatearCedula(objeto.cedula)) )
  
         return arreglo 
