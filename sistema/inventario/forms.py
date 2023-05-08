@@ -245,13 +245,12 @@ class ProveedorFormulario(forms.ModelForm):
 
     class Meta:
         model = Cliente
-        fields = ['tipoCedula','cedula','nombre','apellido','direccion','nacimiento','telefono','correo','telefono2','correo2']
+        fields = ['tipoCedula','cedula','nombre','apellido','direccion','telefono','correo','telefono2','correo2']
         labels = {
         'cedula': 'Identificacion del proveedor',
         'nombre': 'Nombre del proveedor',
         'apellido': 'Apellido del proveedor',
         'direccion': 'Direccion del proveedor',
-        'nacimiento': 'Fecha de nacimiento del proveedor',
         'telefono': 'Numero telefonico del proveedor',
         'correo': 'Correo electronico del proveedor',
         'telefono2': 'Segundo numero telefonico',
@@ -264,7 +263,6 @@ class ProveedorFormulario(forms.ModelForm):
         'id':'nombre','class':'form-control'}),
         'apellido': forms.TextInput(attrs={'class':'form-control','id':'apellido','placeholder':'El apellido del proveedor'}),
         'direccion': forms.TextInput(attrs={'class':'form-control','id':'direccion','placeholder':'Direccion del proveedor'}), 
-        'nacimiento':forms.DateInput(format=('%d-%m-%Y'),attrs={'id':'hasta','class':'form-control','type':'date'} ),
         'telefono':forms.TextInput(attrs={'id':'telefono','class':'form-control',
         'placeholder':'El telefono del proveedor'} ),
         'correo':forms.TextInput(attrs={'placeholder': 'Correo del proveedor',

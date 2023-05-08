@@ -40,12 +40,14 @@ class Opciones(models.Model):
 class Producto(models.Model):
     #id
     decisiones =  [('1','Unidad'),('2','Kilo'),('3','Litro'),('4','Metro')]
-    descripcion = models.CharField(max_length=40)
+    descripcion = models.CharField(max_length=40, verbose_name='Producto')
     precio = models.DecimalField(max_digits=9,decimal_places=2)
-    disponible = models.IntegerField(null=True)
+    disponible = models.IntegerField(null=True, verbose_name='Stock')
     categoria = models.CharField(max_length=20,choices=decisiones)
     tiene_iva = models.BooleanField(null=True)
     
+    def get_categoria_display(self):
+        return dict(self.decisiones).get(self.categoria, '')
 
     class Meta:
         verbose_name = 'Producto'
@@ -205,7 +207,7 @@ class Proveedor(models.Model):
     nombre = models.CharField(max_length=40)
     apellido = models.CharField(max_length=40,null=True)
     direccion = models.CharField(max_length=200)
-    nacimiento = models.DateField()
+    nacimiento = models.DateField(null=True)
     telefono = models.CharField(max_length=20)
     telefono2 = models.CharField(max_length=20,null=True)
     correo = models.CharField(max_length=100)

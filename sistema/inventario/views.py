@@ -438,7 +438,7 @@ class ExportarProductos(LoginRequiredMixin, View):
 
             #Se obtienen las entradas de producto en formato JSON
             data = serializers.serialize("json", Producto.objects.all())
-            fs = FileSystemStorage('inventario/tmp/')
+            fs = FileSystemStorage('inventario/BDD/')
 
             #Se utiliza la variable fs para acceder a la carpeta con mas facilidad
             with fs.open("productos.json", "w") as out:
@@ -614,7 +614,7 @@ class ExportarClientes(LoginRequiredMixin, View):
 
             #Se obtienen las entradas de producto en formato JSON
             data = serializers.serialize("json", Cliente.objects.all())
-            fs = FileSystemStorage('inventario/tmp/')
+            fs = FileSystemStorage('inventario/BDD/')
 
             #Se utiliza la variable fs para acceder a la carpeta con mas facilidad
             with fs.open("clientes.json", "w") as out:
@@ -873,7 +873,7 @@ class GenerarFactura(LoginRequiredMixin, View):
         writer = csv.writer(response)
 
         writer.writerow(['Producto', 'Cantidad', 'Sub-total', 'Total',
-         'Porcentaje IVA utilizado: %s' % (factura.iva.valor_iva)])
+         'Porcentaje IGV utilizado: %s' % (factura.iva.valor_iva)])
 
         for producto in detalles:            
             writer.writerow([producto.id_producto.descripcion,producto.cantidad,producto.sub_total,producto.total])
@@ -956,14 +956,13 @@ class AgregarProveedor(LoginRequiredMixin, View):
             cedula = form.cleaned_data['cedula']
             nombre = form.cleaned_data['nombre']
             direccion = form.cleaned_data['direccion']
-            nacimiento = form.cleaned_data['nacimiento']
             telefono = form.cleaned_data['telefono']
             correo = form.cleaned_data['correo']
             telefono2 = form.cleaned_data['telefono2']
             correo2 = form.cleaned_data['correo2']
 
             proveedor = Proveedor(cedula=cedula,nombre=nombre,
-                direccion=direccion,nacimiento=nacimiento,telefono=telefono,
+                direccion=direccion,telefono=telefono,
                 correo=correo,telefono2=telefono2,correo2=correo2)
             proveedor.save()
             form = ProveedorFormulario()
@@ -1024,7 +1023,7 @@ class ExportarProveedores(LoginRequiredMixin, View):
 
             #Se obtienen las entradas de producto en formato JSON
             data = serializers.serialize("json", Cliente.objects.all())
-            fs = FileSystemStorage('inventario/tmp/')
+            fs = FileSystemStorage('inventario/BDD/')
 
             #Se utiliza la variable fs para acceder a la carpeta con mas facilidad
             with fs.open("clientes.json", "w") as out:
@@ -1331,7 +1330,7 @@ class GenerarPedidoPDF(LoginRequiredMixin, View):
         data = {
              'fecha': pedido.fecha, 
              'monto_general': pedido.monto_general,
-            'nombre_proveedor': pedido.proveedor.nombre + " " + pedido.proveedor.apellido,
+            'nombre_proveedor': pedido.proveedor.nombre,
             'cedula_proveedor': pedido.proveedor.cedula,
             'id_reporte': pedido.id,
             'iva': pedido.iva.valor_iva,
@@ -1490,7 +1489,7 @@ class DescargarBDD(LoginRequiredMixin, View):
 
     def get(self, request):
         #Se obtiene la carpeta donde se va a guardar y despues se crea el respaldo ahi
-        fs = FileSystemStorage('inventario/archivos/tmp/')
+        fs = FileSystemStorage('inventario/archivos/BDD/')
         with fs.open('inventario_respaldo.xml','w') as output:
             call_command('dumpdata','inventario',indent=4,stdout=output,format='xml', 
                 exclude=['contenttypes', 'auth.permission'])
@@ -1506,7 +1505,7 @@ class DescargarBDD(LoginRequiredMixin, View):
             output.close()
 
             #Borra el archivo
-            ruta = 'inventario/archivos/tmp/inventario_respaldo.xml'
+            ruta = 'inventario/archivos/BDD/inventario_respaldo.xml'
             call_command('erasefile',ruta)
 
             #Regresa el archivo a descargar
