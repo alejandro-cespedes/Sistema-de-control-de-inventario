@@ -18,8 +18,8 @@ def productoTieneIva(idProducto):
 
 def sacarIva(elemento):
     iva = Opciones.objects.get(id=1)
-    ivaSacado =  iva.valor_iva/100
-    resultado = elemento + (elemento * Decimal(ivaSacado))  
+    ivaSacado =  1 + (iva.valor_iva/100)
+    resultado = elemento  / (Decimal(ivaSacado))  
     return resultado    
 
 def ivaActual(modo):

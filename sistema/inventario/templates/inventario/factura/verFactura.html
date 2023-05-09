@@ -105,14 +105,15 @@
                                                         <tr>
                                                             <td>{{ producto.id_producto.descripcion }}</td>
                                                             <td>{{ producto.cantidad }}</td>
-                                                            <td>{{ producto.sub_total }}</td>
                                                             <td>{{ producto.total }}</td>
+                                                            <td>{{ producto.sub_total }}</td>
                                                         </tr>
                                                         {% endfor %}
                                                     </tbody>
                                                 </table>
                                                     <tfooter>
-                                                    	Total: {{ factura.monto_general }}
+                                                    	<p>OP. GRAVADAS: {{ factura.monto_general }}</p>
+                                                        <p>TOTAL A PAGAR: {{ factura.sub_monto }}</p>
                                                     </tfooter>
                                             </div>
                                         </section>

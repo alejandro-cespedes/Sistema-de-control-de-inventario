@@ -96,7 +96,8 @@
             Nombre completo del proveedor: {{ nombre_proveedor }} <br/>
             Cedula del proveedor: {{ cedula_proveedor }}  <br/>
             {% endif %}
-            Total general: {{ monto_general }}  <br/>
+            OP. GRAVADAS: {{ monto_general }}  <br/>
+            TOTAL A PAGAR: {{ sub_monto }}  <br/>
             Fecha: {{ fecha }} <br/>
             IGV utilizado: {{ iva }}% <br/>
             <hr class='hrItem' />
@@ -109,23 +110,31 @@
   <tr>
     <th>Producto</th>
     <th>Cantidad</th>
+    <th>Precio unitario</th>
     <th>Sub-total</th>
+    <th>IGV</th>
     <th>Total</th>
   </tr>
+  {% load calculos %}
   {% for producto in detalles %}
   <tr>
     <td>{{ producto.id_producto.descripcion }}</td>
     <td>{{ producto.cantidad }}</td>
-    <td>{{ producto.sub_total }}</td>
+    <td>{{ producto.total|calcular_precio_unitario:producto.cantidad }}</td>
     <td>{{ producto.total }}</td>
+    <td>{{ producto.sub_total|restar:producto.total }}</td>
+    <td>{{ producto.sub_total }}</td>
   </tr>
   {% endfor %}
   <tr>
     <td>-----</td>
     <td>-----</td>
     <td>-----</td>
+    <td>-----</td>
+    <td>-----</td>
     <td>
-      Total general : {{ monto_general }}
+        <p>OP. GRAVADAS: {{ monto_general }}</p>
+        <p>TOTAL A PAGAR: {{    sub_monto }}</p>
     </td>
   </tr>
 </table>

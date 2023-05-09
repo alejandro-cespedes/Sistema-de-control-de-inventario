@@ -777,6 +777,7 @@ class DetallesFactura(LoginRequiredMixin, View):
                 sub = form.cleaned_data['valor_subtotal']
                 id_producto.append(obtenerIdProducto(desc)) #esta funcion, a estas alturas, es innecesaria porque ya tienes la id
                 cantidad.append(cant)
+                ## RECORDATORIO, ACA TIENES QUE CREAR EL 
                 subtotal.append(sub)
 
             #Ingresa la factura
@@ -793,7 +794,7 @@ class DetallesFactura(LoginRequiredMixin, View):
                 else:                   
                     monto_general += element
                     total_general.append(element)        
-
+            
             from datetime import date
 
             cliente = Cliente.objects.get(cedula=cedula)
@@ -902,6 +903,7 @@ class GenerarFacturaPDF(LoginRequiredMixin, View):
         data = {
              'fecha': factura.fecha, 
              'monto_general': factura.monto_general,
+             'sub_monto': factura.sub_monto,
             'nombre_cliente': factura.cliente.nombre + " " + factura.cliente.apellido,
             'cedula_cliente': factura.cliente.cedula,
             'id_reporte': factura.id,
@@ -1330,6 +1332,7 @@ class GenerarPedidoPDF(LoginRequiredMixin, View):
         data = {
              'fecha': pedido.fecha, 
              'monto_general': pedido.monto_general,
+             'sub_monto': pedido.sub_monto,
             'nombre_proveedor': pedido.proveedor.nombre,
             'cedula_proveedor': pedido.proveedor.cedula,
             'id_reporte': pedido.id,
@@ -1604,3 +1607,6 @@ class VerManualDeUsuario(LoginRequiredMixin, View):
 
 
 #Fin de vista--------------------------------------------------------------------------------
+
+def calcular_precio_unitario(sub_total, cantidad):
+    return sub_total / cantidad
