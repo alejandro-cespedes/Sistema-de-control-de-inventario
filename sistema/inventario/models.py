@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 class Usuario(AbstractUser):
     #id
     username = models.CharField(max_length=80, unique=True)
-    password = models.CharField(max_length=20)
+    password = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=60)

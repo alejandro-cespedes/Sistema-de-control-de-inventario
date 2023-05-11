@@ -1524,18 +1524,18 @@ function validarTodo(tipo)
 			 "-El telefono solo puede llevar numeros de 0 al 9. </p>"				
 		}
 
-		if( telefono.value.length <= 9 )
+		if( telefono.value.length <= 7 )
 		{
 			error = true
 			mensaje += "<p class='" + claseErrores +"'>" +
-			 "-El telefono tiene que tener 10 caracteres como minimo. </p>"			
+			 "-El telefono tiene que tener 8 caracteres como minimo. </p>"			
 		}
 
-		if(telefono2.value != "" && (isNaN(parseFloat(telefono2.value)) || telefono2.value.length <= 9) )
+		if(telefono2.value != "" && (isNaN(parseFloat(telefono2.value)) || telefono2.value.length <= 7) )
 		{
 			error = true
 			mensaje += "<p class='" + claseErrores +"'>" +
-			 "-El telefono opcional tiene que tener 10 caracteres como minimo, y todos tienen que ser digitos. </p>"				
+			 "-El telefono opcional tiene que tener 8 caracteres como minimo, y todos tienen que ser digitos. </p>"				
 		}
 
 
@@ -1577,18 +1577,18 @@ function validarTodo(tipo)
 			 "-El telefono solo puede llevar numeros de 0 al 9. </p>"				
 		}
 
-		if( telefono.value.length <= 9 )
+		if( telefono.value.length <= 7 )
 		{
 			error = true
 			mensaje += "<p class='" + claseErrores +"'>" +
-			 "-El telefono tiene que tener 10 caracteres como minimo. </p>"			
+			 "-El telefono tiene que tener 8 caracteres como minimo. </p>"			
 		}
 
-		if(telefono2.value != "" && (isNaN(parseFloat(telefono2.value)) || telefono2.value.length <= 9) )
+		if(telefono2.value != "" && (isNaN(parseFloat(telefono2.value)) || telefono2.value.length <= 7) )
 		{
 			error = true
 			mensaje += "<p class='" + claseErrores +"'>" +
-			 "-El telefono opcional tiene que tener 10 caracteres como minimo, y todos tienen que ser digitos. </p>"				
+			 "-El telefono opcional tiene que tener 8 caracteres como minimo, y todos tienen que ser digitos. </p>"				
 		}
 
 	}
