@@ -416,7 +416,7 @@ class AgregarProducto(LoginRequiredMixin, View):
 
     # Si se llega por GET crearemos un formulario en blanco
     def get(self,request):
-        if es_luisaC_o_williamV(request.user):
+        if es_luisaC(request.user):
             form = ProductoFormulario()
             #Envia al usuario el formulario para que lo llene
             contexto = {'form':form , 'modo':request.session.get('productoProcesado')}   
