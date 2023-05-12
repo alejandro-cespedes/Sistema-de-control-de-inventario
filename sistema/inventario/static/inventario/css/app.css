@@ -734,7 +734,7 @@ pre {
         .card .card-header .header-block {
           padding: 0.5rem 10px; } }
     .card .card-header .title {
-      color: #4f5f6f;
+      color: white;
       display: -webkit-inline-box;
       display: -ms-inline-flexbox;
       display: inline-flex; }
@@ -765,7 +765,7 @@ pre {
           -webkit-box-align: center;
               -ms-flex-align: center;
                   align-items: center;
-          color: #4f5f6f;
+          color: white;;
           opacity: 0.7;
           padding-left: 10px;
           padding-right: 10px;

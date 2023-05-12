@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Permission
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin
 
@@ -31,7 +30,6 @@ class ProductoAdmin(ImportExportModelAdmin):
     list_display = ('descripcion', 'precio', 'disponible', 'categoria')
  
 admin.site.register(Usuario, UsuarioAdmin)
-admin.site.register(Permission)
 admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Proveedor)
 admin.site.register(Pedido)

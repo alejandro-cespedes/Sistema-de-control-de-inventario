@@ -1,5 +1,7 @@
 #renderiza las vistas al usuario
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
+
 # para redirigir a otras paginas
 from django.http import HttpResponseRedirect, HttpResponse,FileResponse
 #el formulario de login
@@ -10,6 +12,8 @@ from django.views import View
 from django.contrib.auth import authenticate, login, logout
 #verifica si el usuario esta logeado
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import user_passes_test
 
 #modelos
 from .models import *
@@ -29,6 +33,23 @@ from django.core.files.storage import FileSystemStorage
 
 #Vistas endogenas.
 
+# funciones para los permisos
+def es_admin(user):
+    return user.is_authenticated and user.is_superuser
+
+def es_luisaC_o_williamV(user):
+    return user.is_authenticated and (user.username == 'luisaC' or user.username == 'williamV')
+def es_williamV_o_joseC(user):
+    return user.is_authenticated and (user.username == 'joseC' or user.username == 'williamV')
+def es_luisQ_o_arnoldQ_o_joseS(user):
+    return user.is_authenticated and (user.username == 'luisQ' or user.username == 'arnoldQ' or user.username == 'joseS')
+def es_joseC(user):
+    return user.username == 'joseC'
+def es_luisaC(user):
+    return user.username == 'luisaC'
+def es_williamV(user):
+    return user.username == 'williamV'
+# fin----------------------------------------------------#
 
 #Interfaz de inicio de sesion----------------------------------------------------#
 class Login(View):
@@ -292,68 +313,74 @@ class Eliminar(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, modo, p):
+        if es_admin(request.user):
+            if modo == 'producto':
+                prod = Producto.objects.get(id=p)
+                prod.delete()
+                messages.success(request, 'Producto de ID %s borrado exitosamente.' % p)
+                return HttpResponseRedirect("/inventario/listarProductos")         
+            
+            elif modo == 'cliente':
+                cliente = Cliente.objects.get(id=p)
+                cliente.delete()
+                messages.success(request, 'Cliente de ID %s borrado exitosamente.' % p)
+                return HttpResponseRedirect("/inventario/listarClientes")            
 
-        if modo == 'producto':
-            prod = Producto.objects.get(id=p)
-            prod.delete()
-            messages.success(request, 'Producto de ID %s borrado exitosamente.' % p)
-            return HttpResponseRedirect("/inventario/listarProductos")         
-           
-        elif modo == 'cliente':
-            cliente = Cliente.objects.get(id=p)
-            cliente.delete()
-            messages.success(request, 'Cliente de ID %s borrado exitosamente.' % p)
-            return HttpResponseRedirect("/inventario/listarClientes")            
 
+            elif modo == 'proveedor':
+                proveedor = Proveedor.objects.get(id=p)
+                proveedor.delete()
+                messages.success(request, 'Proveedor de ID %s borrado exitosamente.' % p)
+                return HttpResponseRedirect("/inventario/listarProveedores")
 
-        elif modo == 'proveedor':
-            proveedor = Proveedor.objects.get(id=p)
-            proveedor.delete()
-            messages.success(request, 'Proveedor de ID %s borrado exitosamente.' % p)
-            return HttpResponseRedirect("/inventario/listarProveedores")
+            elif modo == 'usuario':
+                if request.user.is_superuser == False:
+                    messages.error(request, 'No tienes permisos suficientes para borrar usuarios')  
+                    return HttpResponseRedirect('/inventario/listarUsuarios')
 
-        elif modo == 'usuario':
-            if request.user.is_superuser == False:
-                messages.error(request, 'No tienes permisos suficientes para borrar usuarios')  
-                return HttpResponseRedirect('/inventario/listarUsuarios')
+                elif p == 1:
+                    messages.error(request, 'No puedes eliminar al super-administrador.')
+                    return HttpResponseRedirect('/inventario/listarUsuarios')  
 
-            elif p == 1:
-                messages.error(request, 'No puedes eliminar al super-administrador.')
-                return HttpResponseRedirect('/inventario/listarUsuarios')  
+                elif request.user.id == p:
+                    messages.error(request, 'No puedes eliminar tu propio usuario.')
+                    return HttpResponseRedirect('/inventario/listarUsuarios')                 
 
-            elif request.user.id == p:
-                messages.error(request, 'No puedes eliminar tu propio usuario.')
-                return HttpResponseRedirect('/inventario/listarUsuarios')                 
-
-            else:
-                usuario = Usuario.objects.get(id=p)
-                usuario.delete()
-                messages.success(request, 'Usuario de ID %s borrado exitosamente.' % p)
-                return HttpResponseRedirect("/inventario/listarUsuarios")        
-
+                else:
+                    usuario = Usuario.objects.get(id=p)
+                    usuario.delete()
+                    messages.success(request, 'Usuario de ID %s borrado exitosamente.' % p)
+                    return HttpResponseRedirect("/inventario/listarUsuarios")        
+        else:
+            messages.error(request, 'No tienes permisos para eliminar')
+            return HttpResponseRedirect("/inventario/panel")
 
 #Fin de vista-------------------------------------------------------------------   
 
 
 
 #Muestra una lista de 10 productos por pagina----------------------------------------#
+
+
 class ListarProductos(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
 
     def get(self, request):
-        from django.db import models
+        if es_luisaC_o_williamV(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
+            # Lista de productos de la BDD
+            productos = Producto.objects.all()
 
-        #Lista de productos de la BDD
-        productos = Producto.objects.all()
-                               
-        contexto = {'tabla':productos}
+            contexto = {'tabla': productos}
 
-        contexto = complementarContexto(contexto,request.user)  
+            contexto = complementarContexto(contexto, request.user)
 
-        return render(request, 'inventario/producto/listarProductos.html',contexto)
+            return render(request, 'inventario/producto/listarProductos.html', contexto)
+        else:
+            messages.error(request, 'No tienes permisos para ver los productos.')
+            return HttpResponseRedirect("/inventario/panel")
+
 #Fin de vista-------------------------------------------------------------------------#
-
 
 
 
@@ -363,7 +390,7 @@ class AgregarProducto(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def post(self, request):
-        # Crea una instancia del formulario y la llena con los datos:
+      # Crea una instancia del formulario y la llena con los datos:
         form = ProductoFormulario(request.POST)
         # Revisa si es valido:
         if form.is_valid():
@@ -383,21 +410,28 @@ class AgregarProducto(LoginRequiredMixin, View):
             return HttpResponseRedirect("/inventario/agregarProducto")
         else:
             #De lo contrario lanzara el mismo formulario
-            return render(request, 'inventario/producto/agregarProducto.html', {'form': form})
+            return render(request, 'inventario/producto/agregarProducto.html', {'form': form}) 
+            
+        
 
     # Si se llega por GET crearemos un formulario en blanco
     def get(self,request):
-        form = ProductoFormulario()
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('productoProcesado')}   
-        contexto = complementarContexto(contexto,request.user)  
-        return render(request, 'inventario/producto/agregarProducto.html', contexto)
+        if es_luisaC_o_williamV(request.user):
+            form = ProductoFormulario()
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('productoProcesado')}   
+            contexto = complementarContexto(contexto,request.user)  
+            return render(request, 'inventario/producto/agregarProducto.html', contexto)
+        else:
+            messages.error(request, 'No tienes acceso a esta página.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista------------------------------------------------------------------------# 
 
 
 
 
 #Formulario simple que procesa un script para importar los productos-----------------#
+@method_decorator(user_passes_test(es_admin), name='dispatch')
 class ImportarProductos(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -427,6 +461,7 @@ class ImportarProductos(LoginRequiredMixin, View):
 
 
 #Formulario simple que crea un archivo y respalda los productos-----------------------#
+@method_decorator(user_passes_test(es_admin), name='dispatch')
 class ExportarProductos(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -500,12 +535,16 @@ class EditarProducto(LoginRequiredMixin, View):
             return render(request, 'inventario/producto/agregarProducto.html', {'form': form})
 
     def get(self, request,p): 
-        prod = Producto.objects.get(id=p)
-        form = ProductoFormulario(instance=prod)
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('productoProcesado'),'editar':True}    
-        contexto = complementarContexto(contexto,request.user) 
-        return render(request, 'inventario/producto/agregarProducto.html', contexto)
+        if es_luisaC(request.user):
+            prod = Producto.objects.get(id=p)
+            form = ProductoFormulario(instance=prod)
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('productoProcesado'),'editar':True}    
+            contexto = complementarContexto(contexto,request.user) 
+            return render(request, 'inventario/producto/agregarProducto.html', contexto)
+        else:
+            messages.error(request, 'No puedes editar el producto.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista------------------------------------------------------------------------------------#      
 
 
@@ -513,15 +552,18 @@ class EditarProducto(LoginRequiredMixin, View):
 class ListarClientes(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
-
     def get(self, request):
-        from django.db import models
-        #Saca una lista de todos los clientes de la BDD
-        clientes = Cliente.objects.all()                
-        contexto = {'tabla': clientes}
-        contexto = complementarContexto(contexto,request.user)         
+        if es_luisaC_o_williamV(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
+            from django.db import models
+            #Saca una lista de todos los clientes de la BDD
+            clientes = Cliente.objects.all()                
+            contexto = {'tabla': clientes}
+            contexto = complementarContexto(contexto,request.user)         
 
-        return render(request, 'inventario/cliente/listarClientes.html',contexto) 
+            return render(request, 'inventario/cliente/listarClientes.html',contexto) 
+        else:
+            messages.error(request, 'No tienes acceso a esta página.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista--------------------------------------------------------------------------#
 
 
@@ -564,17 +606,22 @@ class AgregarCliente(LoginRequiredMixin, View):
             return render(request, 'inventario/cliente/agregarCliente.html', {'form': form})        
 
     def get(self,request):
-        form = ClienteFormulario()
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('clienteProcesado')} 
-        contexto = complementarContexto(contexto,request.user)         
-        return render(request, 'inventario/cliente/agregarCliente.html', contexto)
+        if es_luisaC(request.user):
+            form = ClienteFormulario()
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('clienteProcesado')} 
+            contexto = complementarContexto(contexto,request.user)         
+            return render(request, 'inventario/cliente/agregarCliente.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para agregar clientes.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista-----------------------------------------------------------------------------#        
 
 
 
 
 #Formulario simple que procesa un script para importar los clientes-----------------#
+@method_decorator(user_passes_test(es_admin), name='dispatch')
 class ImportarClientes(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -603,6 +650,7 @@ class ImportarClientes(LoginRequiredMixin, View):
 
 
 #Formulario simple que crea un archivo y respalda los clientes-----------------------#
+@method_decorator(user_passes_test(es_admin), name='dispatch')
 class ExportarClientes(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -688,12 +736,17 @@ class EditarCliente(LoginRequiredMixin, View):
             return render(request, 'inventario/cliente/agregarCliente.html', {'form': form})
 
     def get(self, request,p): 
-        cliente = Cliente.objects.get(id=p)
-        form = ClienteFormulario(instance=cliente)
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('clienteProcesado'),'editar':True} 
-        contexto = complementarContexto(contexto,request.user)     
-        return render(request, 'inventario/cliente/agregarCliente.html', contexto)  
+
+        if es_luisaC(request.user):
+            cliente = Cliente.objects.get(id=p)
+            form = ClienteFormulario(instance=cliente)
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('clienteProcesado'),'editar':True} 
+            contexto = complementarContexto(contexto,request.user)     
+            return render(request, 'inventario/cliente/agregarCliente.html', contexto)  
+        else:
+            messages.error(request, 'No tiene permisos para editar clientes.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista--------------------------------------------------------------------------------# 
 
 
@@ -717,16 +770,21 @@ class EmitirFactura(LoginRequiredMixin, View):
             return render(request, 'inventario/factura/emitirFactura.html', {'form': form})
 
     def get(self, request):
-        cedulas = Cliente.cedulasRegistradas()   
-        form = EmitirFacturaFormulario(cedulas=cedulas)
-        contexto = {'form':form}
-        contexto = complementarContexto(contexto,request.user) 
-        return render(request, 'inventario/factura/emitirFactura.html', contexto)
+        if es_joseC(request.user):
+            cedulas = Cliente.cedulasRegistradas()   
+            form = EmitirFacturaFormulario(cedulas=cedulas)
+            contexto = {'form':form}
+            contexto = complementarContexto(contexto,request.user) 
+            return render(request, 'inventario/factura/emitirFactura.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para emitir facturas.')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista---------------------------------------------------------------------------------#
 
 
 
 #Muestra y procesa los detalles de cada producto de la factura--------------------------------#
+@method_decorator(user_passes_test(es_joseC), name='dispatch')
 class DetallesFactura(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -830,14 +888,18 @@ class ListarFacturas(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        #Lista de productos de la BDD
-        facturas = Factura.objects.all()
-        #Crea el paginador
-                               
-        contexto = {'tabla': facturas}
-        contexto = complementarContexto(contexto,request.user) 
+        if es_joseC(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
+            #Lista de productos de la BDD
+            facturas = Factura.objects.all()
+            #Crea el paginador
+                                
+            contexto = {'tabla': facturas}
+            contexto = complementarContexto(contexto,request.user) 
 
-        return render(request, 'inventario/factura/listarFacturas.html', contexto)        
+            return render(request, 'inventario/factura/listarFacturas.html', contexto) 
+        else:
+            messages.error(request, 'No tiene permisos para ver las facturas')
+            return HttpResponseRedirect("/inventario/panel")         
 
 #Fin de vista---------------------------------------------------------------------------------------#     
 
@@ -848,11 +910,15 @@ class VerFactura(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
-        factura = Factura.objects.get(id=p)
-        detalles = DetalleFactura.objects.filter(id_factura_id=p)
-        contexto = {'factura':factura, 'detalles':detalles}
-        contexto = complementarContexto(contexto,request.user)     
-        return render(request, 'inventario/factura/verFactura.html', contexto)
+        if es_joseC(request.user):
+            factura = Factura.objects.get(id=p)
+            detalles = DetalleFactura.objects.filter(id_factura_id=p)
+            contexto = {'factura':factura, 'detalles':detalles}
+            contexto = complementarContexto(contexto,request.user)     
+            return render(request, 'inventario/factura/verFactura.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para ver las facturas')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista--------------------------------------------------------------------------------------#   
 
 
@@ -862,65 +928,72 @@ class GenerarFactura(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
-        import csv
+        if es_joseC(request.user):
+            import csv
 
-        factura = Factura.objects.get(id=p)
-        detalles = DetalleFactura.objects.filter(id_factura_id=p) 
+            factura = Factura.objects.get(id=p)
+            detalles = DetalleFactura.objects.filter(id_factura_id=p) 
 
-        nombre_factura = "factura_%s.csv" % (factura.id)
+            nombre_factura = "factura_%s.csv" % (factura.id)
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_factura
-        writer = csv.writer(response)
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_factura
+            writer = csv.writer(response)
 
-        writer.writerow(['Producto', 'Cantidad', 'Sub-total', 'Total',
-         'Porcentaje IGV utilizado: %s' % (factura.iva.valor_iva)])
+            writer.writerow(['Producto', 'Cantidad', 'Sub-total', 'Total',
+            'Porcentaje IGV utilizado: %s' % (factura.iva.valor_iva)])
 
-        for producto in detalles:            
-            writer.writerow([producto.id_producto.descripcion,producto.cantidad,producto.sub_total,producto.total])
+            for producto in detalles:            
+                writer.writerow([producto.id_producto.descripcion,producto.cantidad,producto.sub_total,producto.total])
 
-        writer.writerow(['Total general:','','', factura.monto_general])
+            writer.writerow(['Total general:','','', factura.monto_general])
 
-        return response
-
+            return response
+        else:
+            messages.error(request, 'No tiene permisos para generar facturas')
+            return HttpResponseRedirect("/inventario/panel")
         #Fin de vista--------------------------------------------------------------------------------------#
 
 
 #Genera la factura en PDF--------------------------------------------------------------------------#
+@method_decorator(user_passes_test(es_joseC), name='dispatch')
 class GenerarFacturaPDF(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
 
     def get(self, request, p):
-        import io
-        from reportlab.pdfgen import canvas
-        import datetime
+        if es_joseC(request.user):
+            import io
+            from reportlab.pdfgen import canvas
+            import datetime
 
-        factura = Factura.objects.get(id=p)
-        general = Opciones.objects.get(id=1)
-        detalles = DetalleFactura.objects.filter(id_factura_id=p)          
+            factura = Factura.objects.get(id=p)
+            general = Opciones.objects.get(id=1)
+            detalles = DetalleFactura.objects.filter(id_factura_id=p)          
 
-        data = {
-             'fecha': factura.fecha, 
-             'monto_general': factura.monto_general,
-             'sub_monto': factura.sub_monto,
-            'nombre_cliente': factura.cliente.nombre + " " + factura.cliente.apellido,
-            'cedula_cliente': factura.cliente.cedula,
-            'id_reporte': factura.id,
-            'iva': factura.iva.valor_iva,
-            'detalles': detalles,
-            'modo': 'factura',
-            'general':general
-        }
+            data = {
+                'fecha': factura.fecha, 
+                'monto_general': factura.monto_general,
+                'sub_monto': factura.sub_monto,
+                'nombre_cliente': factura.cliente.nombre + " " + factura.cliente.apellido,
+                'cedula_cliente': factura.cliente.cedula,
+                'id_reporte': factura.id,
+                'iva': factura.iva.valor_iva,
+                'detalles': detalles,
+                'modo': 'factura',
+                'general':general
+            }
 
-        nombre_factura = "factura_%s.pdf" % (factura.id)
+            nombre_factura = "factura_%s.pdf" % (factura.id)
 
-        pdf = render_to_pdf('inventario/PDF/prueba.html', data)
-        response = HttpResponse(pdf,content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_factura
+            pdf = render_to_pdf('inventario/PDF/prueba.html', data)
+            response = HttpResponse(pdf,content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_factura
 
-        return response  
-
+            return response  
+        else:
+            messages.error(request, 'No tiene permisos para generar reportes PDF')
+            return HttpResponseRedirect("/inventario/panel")
         #Fin de vista--------------------------------------------------------------------------------------#
 
 
@@ -930,13 +1003,17 @@ class ListarProveedores(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        from django.db import models
-        #Saca una lista de todos los clientes de la BDD
-        proveedores = Proveedor.objects.all()                
-        contexto = {'tabla': proveedores}
-        contexto = complementarContexto(contexto,request.user)         
+        if es_luisaC(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
+            from django.db import models
+            #Saca una lista de todos los clientes de la BDD
+            proveedores = Proveedor.objects.all()                
+            contexto = {'tabla': proveedores}
+            contexto = complementarContexto(contexto,request.user)         
 
-        return render(request, 'inventario/proveedor/listarProveedores.html',contexto) 
+            return render(request, 'inventario/proveedor/listarProveedores.html',contexto) 
+        else:
+            messages.error(request, 'No tiene permisos para ver los proveedores')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista--------------------------------------------------------------------------#
 
 
@@ -977,14 +1054,19 @@ class AgregarProveedor(LoginRequiredMixin, View):
             return render(request, 'inventario/proveedor/agregarProveedor.html', {'form': form})        
 
     def get(self,request):
-        form = ProveedorFormulario()
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('proveedorProcesado')} 
-        contexto = complementarContexto(contexto,request.user)         
-        return render(request, 'inventario/proveedor/agregarProveedor.html', contexto)
+        if es_luisaC(request.user):
+            form = ProveedorFormulario()
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('proveedorProcesado')} 
+            contexto = complementarContexto(contexto,request.user)         
+            return render(request, 'inventario/proveedor/agregarProveedor.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para agregar proveedores')
+            return HttpResponseRedirect("/inventario/panel")
 #Fin de vista-----------------------------------------------------------------------------#
 
 #Formulario simple que procesa un script para importar los proveedores-----------------#
+@method_decorator(user_passes_test(es_luisaC), name='dispatch')
 class ImportarProveedores(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -1013,6 +1095,7 @@ class ImportarProveedores(LoginRequiredMixin, View):
 
 
 #Formulario simple que crea un archivo y respalda los proveedores-----------------------#
+@method_decorator(user_passes_test(es_luisaC), name='dispatch')
 class ExportarProveedores(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
@@ -1097,26 +1180,34 @@ class EditarProveedor(LoginRequiredMixin, View):
             return render(request, 'inventario/proveedor/agregarProveedor.html', {'form': form})
 
     def get(self, request,p): 
-        proveedor = Proveedor.objects.get(id=p)
-        form = ProveedorFormulario(instance=proveedor)
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'form':form , 'modo':request.session.get('proveedorProcesado'),'editar':True} 
-        contexto = complementarContexto(contexto,request.user)     
-        return render(request, 'inventario/proveedor/agregarProveedor.html', contexto)  
+        if es_luisaC(request.user):
+            proveedor = Proveedor.objects.get(id=p)
+            form = ProveedorFormulario(instance=proveedor)
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'form':form , 'modo':request.session.get('proveedorProcesado'),'editar':True} 
+            contexto = complementarContexto(contexto,request.user)     
+            return render(request, 'inventario/proveedor/agregarProveedor.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para agregar proveedores')
+            return HttpResponseRedirect("/inventario/panel")  
 #Fin de vista--------------------------------------------------------------------------------#
 
 
-#Agrega un pedido-----------------------------------------------------------------------------------#      
+#Agrega un pedido-----------------------------------------------------------------------------------# 
 class AgregarPedido(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
 
     def get(self, request):
-        cedulas = Proveedor.cedulasRegistradas()
-        form = EmitirPedidoFormulario(cedulas=cedulas)
-        contexto = {'form':form}
-        contexto = complementarContexto(contexto,request.user) 
-        return render(request, 'inventario/pedido/emitirPedido.html', contexto)
+        if es_luisaC(request.user):
+            cedulas = Proveedor.cedulasRegistradas()
+            form = EmitirPedidoFormulario(cedulas=cedulas)
+            contexto = {'form':form}
+            contexto = complementarContexto(contexto,request.user) 
+            return render(request, 'inventario/pedido/emitirPedido.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para agregar pedidos')
+            return HttpResponseRedirect("/inventario/panel") 
 
     def post(self, request):
         # Crea una instancia del formulario y la llena con los datos:
@@ -1142,14 +1233,17 @@ class ListarPedidos(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        from django.db import models
-        #Saca una lista de todos los clientes de la BDD
-        pedidos = Pedido.objects.all()                
-        contexto = {'tabla': pedidos}
-        contexto = complementarContexto(contexto,request.user)         
+        if es_luisaC_o_williamV(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
+            from django.db import models
+            #Saca una lista de todos los clientes de la BDD
+            pedidos = Pedido.objects.all()                
+            contexto = {'tabla': pedidos}
+            contexto = complementarContexto(contexto,request.user)         
 
-        return render(request, 'inventario/pedido/listarPedidos.html',contexto) 
-
+            return render(request, 'inventario/pedido/listarPedidos.html',contexto) 
+        else:
+            messages.error(request, 'No tiene permisos para ver los pedidos')
+            return HttpResponseRedirect("/inventario/panel") 
 #------------------------------------------------------------------------------------------------#
 
 
@@ -1159,15 +1253,18 @@ class DetallesPedido(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        cedula = request.session.get('id_proveedor')
-        productos = request.session.get('form_details')
-        PedidoFormulario = formset_factory(DetallesPedidoFormulario, extra=productos)
-        formset = PedidoFormulario()
-        contexto = {'formset':formset}
-        contexto = complementarContexto(contexto,request.user) 
+        if es_luisaC_o_williamV(request.user):
+            cedula = request.session.get('id_proveedor')
+            productos = request.session.get('form_details')
+            PedidoFormulario = formset_factory(DetallesPedidoFormulario, extra=productos)
+            formset = PedidoFormulario()
+            contexto = {'formset':formset}
+            contexto = complementarContexto(contexto,request.user) 
 
-        return render(request, 'inventario/pedido/detallesPedido.html', contexto)        
-
+            return render(request, 'inventario/pedido/detallesPedido.html', contexto)        
+        else:
+            messages.error(request, 'No tiene permisos para ver los pedidos')
+            return HttpResponseRedirect("/inventario/panel") 
     def post(self, request):
         cedula = request.session.get('id_proveedor')
         productos = request.session.get('form_details')
@@ -1255,12 +1352,16 @@ class VerPedido(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
-        pedido = Pedido.objects.get(id=p)
-        detalles = DetallePedido.objects.filter(id_pedido_id=p)
-        recibido = Pedido.recibido(p)
-        contexto = {'pedido':pedido, 'detalles':detalles,'recibido': recibido}
-        contexto = complementarContexto(contexto,request.user)     
-        return render(request, 'inventario/pedido/verPedido.html', contexto)
+        if es_luisaC_o_williamV(request.user):
+            pedido = Pedido.objects.get(id=p)
+            detalles = DetallePedido.objects.filter(id_pedido_id=p)
+            recibido = Pedido.recibido(p)
+            contexto = {'pedido':pedido, 'detalles':detalles,'recibido': recibido}
+            contexto = complementarContexto(contexto,request.user)     
+            return render(request, 'inventario/pedido/verPedido.html', contexto)
+        else:
+            messages.error(request, 'No tiene permisos para ver los pedidos')
+            return HttpResponseRedirect("/inventario/panel") 
 #Fin de vista--------------------------------------------------------------------------------------#   
 
 #Valida un pedido ya insertado------------------------------------------------#
@@ -1269,18 +1370,22 @@ class ValidarPedido(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
-        pedido = Pedido.objects.get(id=p)
-        detalles = DetallePedido.objects.filter(id_pedido_id=p)
+        if es_williamV(request.user):
+            pedido = Pedido.objects.get(id=p)
+            detalles = DetallePedido.objects.filter(id_pedido_id=p)
 
-        #Agrega los productos del pedido
-        for elemento in detalles:
-            elemento.id_producto.disponible += elemento.cantidad
-            elemento.id_producto.save()
+            #Agrega los productos del pedido
+            for elemento in detalles:
+                elemento.id_producto.disponible += elemento.cantidad
+                elemento.id_producto.save()
 
-        pedido.presente = True
-        pedido.save()
-        messages.success(request, 'Pedido de ID %s verificado exitosamente.' % pedido.id)     
-        return HttpResponseRedirect("/inventario/verPedido/%s" % p) 
+            pedido.presente = True
+            pedido.save()
+            messages.success(request, 'Pedido de ID %s verificado exitosamente.' % pedido.id)     
+            return HttpResponseRedirect("/inventario/verPedido/%s" % p)
+        else:
+            messages.error(request, 'No tiene permisos para validar el pedido')
+            return HttpResponseRedirect("/inventario/panel")  
 #Fin de vista--------------------------------------------------------------------------------------#   
 
 
@@ -1290,28 +1395,31 @@ class GenerarPedido(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
-        import csv
+        if es_williamV_o_joseC(request.user):
+            import csv
 
-        pedido = Pedido.objects.get(id=p)
-        detalles = DetallePedido.objects.filter(id_pedido_id=p) 
+            pedido = Pedido.objects.get(id=p)
+            detalles = DetallePedido.objects.filter(id_pedido_id=p) 
 
-        nombre_pedido = "pedido_%s.csv" % (pedido.id)
+            nombre_pedido = "pedido_%s.csv" % (pedido.id)
 
-        response = HttpResponse(content_type='text/csv')
+            response = HttpResponse(content_type='text/csv')
 
-        response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_pedido
-        writer = csv.writer(response)
+            response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_pedido
+            writer = csv.writer(response)
 
-        writer.writerow(['Producto', 'Cantidad', 'Sub-total', 'Total',
-         'Porcentaje IVA utilizado: %s' % (pedido.iva.valor_iva)])
+            writer.writerow(['Producto', 'Cantidad', 'Sub-total', 'Total',
+            'Porcentaje IVA utilizado: %s' % (pedido.iva.valor_iva)])
 
-        for producto in detalles:            
-            writer.writerow([producto.id_producto.descripcion,producto.cantidad,producto.sub_total,producto.total])
+            for producto in detalles:            
+                writer.writerow([producto.id_producto.descripcion,producto.cantidad,producto.sub_total,producto.total])
 
-        writer.writerow(['Total general:','','', pedido.monto_general])
+            writer.writerow(['Total general:','','', pedido.monto_general])
 
-        return response
-
+            return response
+        else:
+            messages.error(request, 'No tiene permisos para generar el pedido')
+            return HttpResponseRedirect("/inventario/panel")  
         #Fin de vista--------------------------------------------------------------------------------------#
 
 
@@ -1323,34 +1431,37 @@ class GenerarPedidoPDF(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, p):
+        if es_williamV(request.user):
 
-        pedido = Pedido.objects.get(id=p)
-        general = Opciones.objects.get(id=1)
-        detalles = DetallePedido.objects.filter(id_pedido_id=p)
+            pedido = Pedido.objects.get(id=p)
+            general = Opciones.objects.get(id=1)
+            detalles = DetallePedido.objects.filter(id_pedido_id=p)
 
 
-        data = {
-             'fecha': pedido.fecha, 
-             'monto_general': pedido.monto_general,
-             'sub_monto': pedido.sub_monto,
-            'nombre_proveedor': pedido.proveedor.nombre,
-            'cedula_proveedor': pedido.proveedor.cedula,
-            'id_reporte': pedido.id,
-            'iva': pedido.iva.valor_iva,
-            'detalles': detalles,
-            'modo' : 'pedido',
-            'general': general
-        }
+            data = {
+                'fecha': pedido.fecha, 
+                'monto_general': pedido.monto_general,
+                'sub_monto': pedido.sub_monto,
+                'nombre_proveedor': pedido.proveedor.nombre,
+                'cedula_proveedor': pedido.proveedor.cedula,
+                'id_reporte': pedido.id,
+                'iva': pedido.iva.valor_iva,
+                'detalles': detalles,
+                'modo' : 'pedido',
+                'general': general
+            }
 
-        nombre_pedido = "pedido_%s.pdf" % (pedido.id)
+            nombre_pedido = "pedido_%s.pdf" % (pedido.id)
 
-        pdf = render_to_pdf('inventario/PDF/prueba.html', data)
-        response = HttpResponse(pdf,content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_pedido
+            pdf = render_to_pdf('inventario/PDF/prueba.html', data)
+            response = HttpResponse(pdf,content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="%s"' % nombre_pedido
 
-        return response 
-        #Fin de vista--------------------------------------------------------------------------------------#
-
+            return response 
+            #Fin de vista--------------------------------------------------------------------------------------#
+        else:
+            messages.error(request, 'No tiene permisos para generar el pedido')
+            return HttpResponseRedirect("/inventario/panel")
 
 #Crea un nuevo usuario--------------------------------------------------------------#
 class CrearUsuario(LoginRequiredMixin, View):
@@ -1435,11 +1546,15 @@ class ListarUsuarios(LoginRequiredMixin, View):
     redirect_field_name = None    
 
     def get(self, request):
-        usuarios = Usuario.objects.all()
-        #Envia al usuario el formulario para que lo llene
-        contexto = {'tabla':usuarios}   
-        contexto = complementarContexto(contexto,request.user)  
-        return render(request, 'inventario/usuario/listarUsuarios.html', contexto)
+        if request.user.is_superuser:
+            usuarios = Usuario.objects.all()
+            #Envia al usuario el formulario para que lo llene
+            contexto = {'tabla':usuarios}   
+            contexto = complementarContexto(contexto,request.user)  
+            return render(request, 'inventario/usuario/listarUsuarios.html', contexto)
+        else:
+            messages.error(request, 'No tiene los permisos para crear un usuario nuevo')
+            return HttpResponseRedirect('/inventario/panel')
 
     def post(self, request):
         pass   
@@ -1491,28 +1606,32 @@ class DescargarBDD(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        #Se obtiene la carpeta donde se va a guardar y despues se crea el respaldo ahi
-        fs = FileSystemStorage('inventario/archivos/BDD/')
-        with fs.open('inventario_respaldo.xml','w') as output:
-            call_command('dumpdata','inventario',indent=4,stdout=output,format='xml', 
-                exclude=['contenttypes', 'auth.permission'])
+        if request.user.is_superuser:
+            #Se obtiene la carpeta donde se va a guardar y despues se crea el respaldo ahi
+            fs = FileSystemStorage('inventario/archivos/BDD/')
+            with fs.open('inventario_respaldo.xml','w') as output:
+                call_command('dumpdata','inventario',indent=4,stdout=output,format='xml', 
+                    exclude=['contenttypes', 'auth.permission'])
 
-            output.close()
+                output.close()
 
-        #Lo de abajo es para descargarlo
-        with fs.open('inventario_respaldo.xml','r') as output:
-            response = HttpResponse(output.read(), content_type="application/force-download")
-            response['Content-Disposition'] = 'attachment; filename="inventario_respaldo.xml"'
+            #Lo de abajo es para descargarlo
+            with fs.open('inventario_respaldo.xml','r') as output:
+                response = HttpResponse(output.read(), content_type="application/force-download")
+                response['Content-Disposition'] = 'attachment; filename="inventario_respaldo.xml"'
 
-            #Cierra el archivo
-            output.close()
+                #Cierra el archivo
+                output.close()
 
-            #Borra el archivo
-            ruta = 'inventario/archivos/BDD/inventario_respaldo.xml'
-            call_command('erasefile',ruta)
+                #Borra el archivo
+                ruta = 'inventario/archivos/BDD/inventario_respaldo.xml'
+                call_command('erasefile',ruta)
 
-            #Regresa el archivo a descargar
-            return response
+                #Regresa el archivo a descargar
+                return response
+        else:
+            messages.error(request, 'No tiene los permisos para descargar la base de datos')
+            return HttpResponseRedirect('/inventario/panel')
 
 
 #Fin de vista--------------------------------------------------------------------------------
@@ -1524,20 +1643,23 @@ class ConfiguracionGeneral(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request):
-        conf = Opciones.objects.get(id=1)
-        form = OpcionesFormulario()
-        
-        #Envia al usuario el formulario para que lo llene
+        if request.user.is_superuser:
+            conf = Opciones.objects.get(id=1)
+            form = OpcionesFormulario()
+            
+            #Envia al usuario el formulario para que lo llene
 
-        form['moneda'].field.widget.attrs['value']  = conf.moneda
-        form['valor_iva'].field.widget.attrs['value']  = conf.valor_iva
-        form['mensaje_factura'].field.widget.attrs['value']  = conf.mensaje_factura
-        form['nombre_negocio'].field.widget.attrs['value']  = conf.nombre_negocio
+            form['moneda'].field.widget.attrs['value']  = conf.moneda
+            form['valor_iva'].field.widget.attrs['value']  = conf.valor_iva
+            form['mensaje_factura'].field.widget.attrs['value']  = conf.mensaje_factura
+            form['nombre_negocio'].field.widget.attrs['value']  = conf.nombre_negocio
 
-        contexto = {'form':form}    
-        contexto = complementarContexto(contexto,request.user) 
-        return render(request, 'inventario/opciones/configuracion.html', contexto)
-
+            contexto = {'form':form}    
+            contexto = complementarContexto(contexto,request.user) 
+            return render(request, 'inventario/opciones/configuracion.html', contexto)
+        else:
+            messages.error(request, 'No tiene los permisos para acceder a la configuracion general.')
+            return HttpResponseRedirect('/inventario/panel')
     def post(self,request):
         # Crea una instancia del formulario y la llena con los datos:
         form = OpcionesFormulario(request.POST,request.FILES)
@@ -1580,30 +1702,33 @@ class VerManualDeUsuario(LoginRequiredMixin, View):
     redirect_field_name = None
 
     def get(self, request, pagina):
-        if pagina == 'inicio':
-            return render(request, 'inventario/manual/index.html') 
+        if request.user.is_superuser:
+            if pagina == 'inicio':
+                return render(request, 'inventario/manual/index.html') 
 
-        if pagina == 'producto':
-            return render(request, 'inventario/manual/producto.html') 
+            if pagina == 'producto':
+                return render(request, 'inventario/manual/producto.html') 
 
-        if pagina == 'proveedor':
-            return render(request, 'inventario/manual/proveedor.html') 
+            if pagina == 'proveedor':
+                return render(request, 'inventario/manual/proveedor.html') 
 
-        if pagina == 'pedido':
-            return render(request, 'inventario/manual/pedido.html') 
+            if pagina == 'pedido':
+                return render(request, 'inventario/manual/pedido.html') 
 
-        if pagina == 'clientes':
-            return render(request, 'inventario/manual/clientes.html') 
+            if pagina == 'clientes':
+                return render(request, 'inventario/manual/clientes.html') 
 
-        if pagina == 'factura':
-            return render(request, 'inventario/manual/factura.html') 
+            if pagina == 'factura':
+                return render(request, 'inventario/manual/factura.html') 
 
-        if pagina == 'usuarios':
-            return render(request, 'inventario/manual/usuarios.html')
+            if pagina == 'usuarios':
+                return render(request, 'inventario/manual/usuarios.html')
 
-        if pagina == 'opciones':
-            return render(request, 'inventario/manual/opciones.html')
-
+            if pagina == 'opciones':
+                return render(request, 'inventario/manual/opciones.html')
+        else:
+            messages.error(request, 'Esta pagina esta en mantenimiento, si necesita ayuda, comunicarse a soporte')
+            return HttpResponseRedirect('/inventario/panel')
 
 
 #Fin de vista--------------------------------------------------------------------------------

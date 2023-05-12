@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from django.views.generic.base import RedirectView
 app_name = "inventario"
 
 urlpatterns = [
@@ -11,6 +11,7 @@ path('perfil/<str:modo>/<int:p>', views.Perfil.as_view(), name='perfil'),
 path('eliminar/<str:modo>/<int:p>', views.Eliminar.as_view(), name='eliminar'),
 
 path('listarProductos', views.ListarProductos.as_view(), name='listarProductos'),
+path('warning', views.ListarProductos.as_view(), name='warning'),
 path('agregarProducto', views.AgregarProducto.as_view(), name='agregarProducto'),
 path('importarProductos', views.ImportarProductos.as_view(), name='importarProductos'),
 path('exportarProductos', views.ExportarProductos.as_view(), name='exportarProductos'),
@@ -50,6 +51,9 @@ path('importarBDD',views.ImportarBDD.as_view(), name='importarBDD'),
 path('descargarBDD', views.DescargarBDD.as_view(), name='descargarBDD'),
 path('configuracionGeneral', views.ConfiguracionGeneral.as_view(), name='configuracionGeneral'),
 
-path('verManualDeUsuario/<str:pagina>/',views.VerManualDeUsuario.as_view(), name='verManualDeUsuario')
+path('verManualDeUsuario/<str:pagina>/',views.VerManualDeUsuario.as_view(), name='verManualDeUsuario'),
+# persmisos
+path('access-denied/', RedirectView.as_view(url='/inventario/login'), name='access_denied'),
+
 ]
 
