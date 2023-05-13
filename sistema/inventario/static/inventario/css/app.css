@@ -2955,12 +2955,13 @@ span a {
 .logo-nuevo
 {
   display: inline-block;
-  width: 45px;
-  height: 25px;
+  width: 40px;
+  height: 23px;
   vertical-align: middle;
-  margin-right: 5px;
-  position: relative; 
+  margin-right: 0px;
+  position: relative;
   padding-bottom: 20px;
+
 }
 
 .logo-nuevo img#logo-endogeno

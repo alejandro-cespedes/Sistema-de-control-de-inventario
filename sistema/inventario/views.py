@@ -35,20 +35,20 @@ from django.core.files.storage import FileSystemStorage
 
 # funciones para los permisos
 def es_admin(user):
-    return user.is_authenticated and user.is_superuser
+    return user.is_authenticated
 
 def es_luisaC_o_williamV(user):
-    return user.is_authenticated and (user.username == 'luisaC' or user.username == 'williamV')
+    return user.is_authenticated and (user.username == 'luisaC' or user.username == 'williamV' or user.username == 'admin')
 def es_williamV_o_joseC(user):
-    return user.is_authenticated and (user.username == 'joseC' or user.username == 'williamV')
+    return user.is_authenticated and (user.username == 'joseC' or user.username == 'williamV' or user.username == 'admin')
 def es_luisQ_o_arnoldQ_o_joseS(user):
-    return user.is_authenticated and (user.username == 'luisQ' or user.username == 'arnoldQ' or user.username == 'joseS')
+    return user.is_authenticated and (user.username == 'luisQ' or user.username == 'arnoldQ' or user.username == 'joseS' or user.username == 'admin')
 def es_joseC(user):
-    return user.username == 'joseC'
+    return user.username == 'joseC' or user.username == 'admin'
 def es_luisaC(user):
-    return user.username == 'luisaC'
+    return user.username == 'luisaC' or user.username == 'admin'
 def es_williamV(user):
-    return user.username == 'williamV'
+    return user.username == 'williamV' or user.username == 'admin'
 # fin----------------------------------------------------#
 
 #Interfaz de inicio de sesion----------------------------------------------------#
