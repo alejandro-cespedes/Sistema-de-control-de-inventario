@@ -1735,3 +1735,4 @@ class VerManualDeUsuario(LoginRequiredMixin, View):
 
 def calcular_precio_unitario(sub_total, cantidad):
     return sub_total / cantidad
+
