@@ -365,7 +365,7 @@ class Eliminar(LoginRequiredMixin, View):
 class ListarProductos(LoginRequiredMixin, View):
     login_url = '/inventario/login'
     redirect_field_name = None
-
+    
     def get(self, request):
         if es_luisaC_o_williamV(request.user) or es_luisQ_o_arnoldQ_o_joseS(request.user):
             # Lista de productos de la BDD
@@ -780,7 +780,6 @@ class EmitirFactura(LoginRequiredMixin, View):
             messages.error(request, 'No tiene permisos para emitir facturas.')
             return HttpResponseRedirect("/inventario/panel")
 #Fin de vista---------------------------------------------------------------------------------#
-
 
 
 #Muestra y procesa los detalles de cada producto de la factura--------------------------------#
